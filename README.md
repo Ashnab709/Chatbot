@@ -1,65 +1,65 @@
-import streamlit as st
-from PyPDF2 import PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
-from langchain_community.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-import os
+# 📄 PDF Question Answering Chatbot 🤖
 
-# Streamlit UI
-st.header("📄 PDF Chatbot (Local Hugging Face Model)")
+An interactive **Streamlit-based chatbot** that lets you upload a PDF and ask natural language questions about its content.  
+It uses **LangChain**, **Hugging Face Sentence Transformers**, **FAISS**, and a **local Mistral-7B-Instruct** model to answer queries with full offline processing.
 
-with st.sidebar:
-    st.title("📁 Upload Documents")
-    file = st.file_uploader("Upload PDF and ask questions", type="pdf")
+---
 
-if file is not None:
-    # Read and extract PDF text
-    pdf_reader = PdfReader(file)
-    text = ""
-    for page in pdf_reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text
+## 🚀 Features
 
-    # Split text into chunks
-    text_splitter = RecursiveCharacterTextSplitter(
-        separators=["\n"],
-        chunk_size=1000,
-        chunk_overlap=150,
-        length_function=len
-    )
-    chunks = text_splitter.split_text(text)
+✅ **Upload & Parse PDFs** – Extracts text from all pages  
+✅ **Smart Chunking** – Splits large text into manageable chunks  
+✅ **Semantic Search** – Embeddings via `all-MiniLM-L6-v2`  
+✅ **Vector Store** – FAISS for fast similarity search  
+✅ **Local LLM Answering** – Mistral-7B-Instruct for contextual Q&A  
+✅ **Privacy Friendly** – All processing is local, no external API calls  
 
-    # Generate embeddings
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+---
 
-    # Create vector store
-    vector_store = FAISS.from_texts(chunks, embeddings)
+## 🖼 Demo Preview
+![Demo Screenshot](questions.png)
 
-    # Get user input
-    user_question = st.text_input("💬 Ask a question about the document:")
+---
 
-    if user_question:
-        # Perform similarity search
-        matched_docs = vector_store.similarity_search(user_question)
+## 🛠 Tech Stack
 
-        # Load local model (you can change the model)
-        model_id = "mistralai/Mistral-7B-Instruct-v0.1"
+- **Frontend/UI**: [Streamlit](https://streamlit.io/)  
+- **Backend**: Python  
+- **NLP Framework**: [LangChain](https://www.langchain.com/)  
+- **Embedding Model**: [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)  
+- **Vector Database**: [FAISS](https://faiss.ai/)  
+- **LLM**: [Mistral-7B-Instruct](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)  
 
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype="auto", device_map="auto")
-        pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=512)
-        llm = HuggingFacePipeline(pipeline=pipe)
+---
 
-        # Load QA chain
-        chain = load_qa_chain(llm, chain_type="stuff")
+## 📦 Installation & Setup
 
-        # Run QA chain
-        response = chain.run(input_documents=matched_docs, question=user_question)
+```bash
+# Clone the repo
+git clone https://github.com/your-username/pdf-chatbot.git
+cd pdf-chatbot
 
-        # Display response
-        st.markdown("### 🤖 Answer:")
-        st.write(response)
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+streamlit run chatbot.py
+🎯 Usage
+Run the app with streamlit run chatbot.py
+
+Upload your PDF using the sidebar
+
+Ask a question about the content in the input box
+
+Get an answer from the local Mistral-7B-Instruct model
+
+📜 Requirements
+Python 3.9+
+
+Sufficient RAM & GPU (for local model)
+
+Models downloaded from Hugging Face (first run may take time)
+
+🤝 Contributing
+Pull requests are welcome! For major changes, open an issue first to discuss what you'd like to change.
+
